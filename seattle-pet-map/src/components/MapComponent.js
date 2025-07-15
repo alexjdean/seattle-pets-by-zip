@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapComponent.css';
 
@@ -41,8 +41,7 @@ const ZIP_COORDINATES = {
   '98177': [47.7336, -122.3758],
   '98178': [47.5019, -122.2417],
   '98188': [47.4614, -122.2950],
-  '98199': [47.6564, -122.4089],
-  '98109': [47.6244, -122.3517]
+  '98199': [47.6564, -122.4089]
 };
 
 const MapComponent = ({ zipCodeData, selectedSpecies }) => {
