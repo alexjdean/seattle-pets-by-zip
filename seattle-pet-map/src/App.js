@@ -10,34 +10,55 @@ function App() {
   const [selectedSpecies, setSelectedSpecies] = useState('All');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dataInfo, setDataInfo] = useState(null);
 
   useEffect(() => {
     // Load CSV data
     Papa.parse('/Seattle_Pet_Licenses_20250714.csv', {
       download: true,
       header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
       complete: (results) => {
-        if (results.errors.length > 0) {
-          setError('Error parsing CSV file');
-          console.error('CSV parsing errors:', results.errors);
-        } else {
-          // Clean the data - filter out invalid entries
-          const cleanData = results.data.filter(row => 
+        console.log('CSV parsing complete:', results);
+        
+        // Filter out rows with parsing errors or missing critical data
+        const validData = results.data.filter(row => {
+          // Check if row has the essential fields
+          return (
+            row &&
             row['ZIP Code'] && 
             row['Species'] && 
-            row['ZIP Code'].trim() !== '' && 
-            row['Species'].trim() !== '' &&
-            ['Dog', 'Cat', 'Goat', 'Pig'].includes(row['Species'].trim())
+            row['License Issue Date'] &&
+            row['ZIP Code'].toString().trim() !== '' && 
+            row['Species'].toString().trim() !== '' &&
+            ['Dog', 'Cat', 'Goat', 'Pig'].includes(row['Species'].toString().trim()) &&
+            // Validate ZIP code format (should be 5 digits)
+            /^\d{5}$/.test(row['ZIP Code'].toString().trim())
           );
-          
-          setPetData(cleanData);
-          setFilteredData(cleanData);
-          setLoading(false);
+        });
+
+        const invalidRows = results.data.length - validData.length;
+        console.log(`Filtered data: ${validData.length} valid rows out of ${results.data.length} total rows`);
+        
+        if (validData.length === 0) {
+          setError('No valid data found in CSV file');
+        } else {
+          setPetData(validData);
+          setFilteredData(validData);
+          setDataInfo({
+            totalRows: results.data.length,
+            validRows: validData.length,
+            invalidRows: invalidRows,
+            species: [...new Set(validData.map(row => row['Species']))].sort()
+          });
         }
+        
+        setLoading(false);
       },
       error: (error) => {
-        setError('Error loading CSV file');
         console.error('CSV loading error:', error);
+        setError('Error loading CSV file: ' + error.message);
         setLoading(false);
       }
     });
@@ -54,7 +75,7 @@ function App() {
 
   // Group data by ZIP code and count licenses
   const groupedData = filteredData.reduce((acc, row) => {
-    const zipCode = row['ZIP Code'].trim();
+    const zipCode = row['ZIP Code'].toString().trim();
     if (!acc[zipCode]) {
       acc[zipCode] = {
         zipCode,
@@ -77,8 +98,12 @@ function App() {
       <div className="App">
         <header className="App-header">
           <h1>Seattle Pet Licenses Map</h1>
-          <p>Loading data...</p>
+          <p>Loading and processing pet license data...</p>
         </header>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Please wait while we load the data...</p>
+        </div>
       </div>
     );
   }
@@ -88,8 +113,18 @@ function App() {
       <div className="App">
         <header className="App-header">
           <h1>Seattle Pet Licenses Map</h1>
-          <p>Error: {error}</p>
+          <p>Error occurred while loading data</p>
         </header>
+        <div className="error-container">
+          <h3>❌ Error Loading Data</h3>
+          <p>{error}</p>
+          <p>Please check:</p>
+          <ul style={{ textAlign: 'left' }}>
+            <li>Your internet connection</li>
+            <li>That the CSV file is accessible</li>
+            <li>Try refreshing the page</li>
+          </ul>
+        </div>
       </div>
     );
   }
@@ -100,6 +135,16 @@ function App() {
         <h1>Seattle Pet Licenses Map</h1>
         <p>Visualizing {filteredData.length} pet licenses across Seattle ZIP codes</p>
       </header>
+      
+      {dataInfo && (
+        <div className="success-info">
+          <strong>✅ Data loaded successfully!</strong><br />
+          Processed {dataInfo.validRows.toLocaleString()} valid records from {dataInfo.totalRows.toLocaleString()} total rows
+          {dataInfo.invalidRows > 0 && (
+            <span> ({dataInfo.invalidRows.toLocaleString()} invalid rows filtered out)</span>
+          )}
+        </div>
+      )}
       
       <FilterComponent 
         species={uniqueSpecies}
