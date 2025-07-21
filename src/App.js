@@ -22,10 +22,10 @@ function App() {
       })
       .then(data => {
         console.log('Data loaded successfully:', data.length, 'records');
-        
+
         setPetData(data);
         setFilteredData(data);
-        
+
         // Get unique species for the filter
         const speciesSet = new Set(data.map(row => row['Species']));
         const uniqueSpecies = Array.from(speciesSet).sort();
@@ -34,7 +34,7 @@ function App() {
           totalRecords: data.length,
           species: uniqueSpecies
         });
-        
+
         setLoading(false);
       })
       .catch(error => {
@@ -115,20 +115,13 @@ function App() {
         <h1>Seattle Pet Licenses Map</h1>
         <p>Visualizing {filteredData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
       </header>
-      
-      {dataInfo && (
-        <div className="success-info">
-          <strong>✅ Data loaded successfully!</strong><br />
-          {dataInfo.totalRecords.toLocaleString()} pet license records loaded
-        </div>
-      )}
-      
+
       <FilterComponent 
         species={uniqueSpecies}
         selectedSpecies={selectedSpecies}
         onSpeciesChange={setSelectedSpecies}
       />
-      
+
       <MapComponent 
         zipCodeData={zipCodeData}
         selectedSpecies={selectedSpecies}
