@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
 import MapComponent from './components/MapComponent';
 import FilterComponent from './components/FilterComponent';
 import './App.css';
@@ -13,55 +12,36 @@ function App() {
   const [dataInfo, setDataInfo] = useState(null);
 
   useEffect(() => {
-    // Load CSV data
-    Papa.parse('/Seattle_Pet_Licenses_20250714.csv', {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
-      complete: (results) => {
-        console.log('CSV parsing complete:', results);
-        
-        // Filter out rows with parsing errors or missing critical data
-        const validData = results.data.filter(row => {
-          // Check if row has the essential fields
-          return (
-            row &&
-            row['ZIP Code'] && 
-            row['Species'] && 
-            row['License Issue Date'] &&
-            row['ZIP Code'].toString().trim() !== '' && 
-            row['Species'].toString().trim() !== '' &&
-            ['Dog', 'Cat', 'Goat', 'Pig'].includes(row['Species'].toString().trim()) &&
-            // Validate ZIP code format (should be 5 digits)
-            /^\d{5}$/.test(row['ZIP Code'].toString().trim())
-          );
-        });
-
-        const invalidRows = results.data.length - validData.length;
-        console.log(`Filtered data: ${validData.length} valid rows out of ${results.data.length} total rows`);
-        
-        if (validData.length === 0) {
-          setError('No valid data found in CSV file');
-        } else {
-          setPetData(validData);
-          setFilteredData(validData);
-          setDataInfo({
-            totalRows: results.data.length,
-            validRows: validData.length,
-            invalidRows: invalidRows,
-            species: [...new Set(validData.map(row => row['Species']))].sort()
-          });
+    // Load preprocessed JSON data for fastest performance
+    fetch('/pets_clean.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Data loaded successfully:', data.length, 'records');
+        
+        setPetData(data);
+        setFilteredData(data);
+        
+        // Get unique species for the filter
+        const speciesSet = new Set(data.map(row => row['Species']));
+        const uniqueSpecies = Array.from(speciesSet).sort();
+        
+        setDataInfo({
+          totalRecords: data.length,
+          species: uniqueSpecies
+        });
         
         setLoading(false);
-      },
-      error: (error) => {
-        console.error('CSV loading error:', error);
-        setError('Error loading CSV file: ' + error.message);
+      })
+      .catch(error => {
+        console.error('Error loading data:', error);
+        setError('Error loading pet data: ' + error.message);
         setLoading(false);
-      }
-    });
+      });
   }, []);
 
   useEffect(() => {
@@ -75,7 +55,7 @@ function App() {
 
   // Group data by ZIP code and count licenses
   const groupedData = filteredData.reduce((acc, row) => {
-    const zipCode = row['ZIP Code'].toString().trim();
+    const zipCode = row['ZIP Code'];
     if (!acc[zipCode]) {
       acc[zipCode] = {
         zipCode,
@@ -91,18 +71,18 @@ function App() {
   const zipCodeData = Object.values(groupedData);
 
   // Get unique species for filter
-  const uniqueSpecies = [...new Set(petData.map(row => row['Species']))].sort();
+  const uniqueSpecies = dataInfo ? dataInfo.species : [];
 
   if (loading) {
     return (
       <div className="App">
         <header className="App-header">
           <h1>Seattle Pet Licenses Map</h1>
-          <p>Loading and processing pet license data...</p>
+          <p>Loading pet license data...</p>
         </header>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Please wait while we load the data...</p>
+          <p>Please wait...</p>
         </div>
       </div>
     );
@@ -121,7 +101,7 @@ function App() {
           <p>Please check:</p>
           <ul style={{ textAlign: 'left' }}>
             <li>Your internet connection</li>
-            <li>That the CSV file is accessible</li>
+            <li>That the data file is accessible</li>
             <li>Try refreshing the page</li>
           </ul>
         </div>
@@ -133,16 +113,13 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Seattle Pet Licenses Map</h1>
-        <p>Visualizing {filteredData.length} pet licenses across Seattle ZIP codes</p>
+        <p>Visualizing {filteredData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
       </header>
       
       {dataInfo && (
         <div className="success-info">
           <strong>✅ Data loaded successfully!</strong><br />
-          Processed {dataInfo.validRows.toLocaleString()} valid records from {dataInfo.totalRows.toLocaleString()} total rows
-          {dataInfo.invalidRows > 0 && (
-            <span> ({dataInfo.invalidRows.toLocaleString()} invalid rows filtered out)</span>
-          )}
+          {dataInfo.totalRecords.toLocaleString()} pet license records loaded
         </div>
       )}
       
