@@ -10,6 +10,16 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataInfo, setDataInfo] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     // Load preprocessed JSON data for fastest performance
@@ -77,8 +87,21 @@ function App() {
     return (
       <div className="App">
         <header className="App-header">
-          <h1>Seattle Pet Licenses Map</h1>
-          <p>Loading pet license data...</p>
+          <div className="header-content">
+            <div className="header-text">
+              <h1>Seattle Pet Licenses Map</h1>
+              <p>Loading pet license data...</p>
+            </div>
+            <div className="header-controls">
+              <button 
+                className="dark-mode-toggle"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
+              </button>
+            </div>
+          </div>
         </header>
         <div className="loading-container">
           <div className="loading-spinner"></div>
@@ -92,8 +115,21 @@ function App() {
     return (
       <div className="App">
         <header className="App-header">
-          <h1>Seattle Pet Licenses Map</h1>
-          <p>Error occurred while loading data</p>
+          <div className="header-content">
+            <div className="header-text">
+              <h1>Seattle Pet Licenses Map</h1>
+              <p>Error occurred while loading data</p>
+            </div>
+            <div className="header-controls">
+              <button 
+                className="dark-mode-toggle"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
+              </button>
+            </div>
+          </div>
         </header>
         <div className="error-container">
           <h3>❌ Error Loading Data</h3>
@@ -112,15 +148,29 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Seattle Pet Licenses Map</h1>
-        <p>Visualizing {filteredData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
+        <div className="header-content">
+          <div className="header-text">
+            <h1>Seattle Pet Licenses Map</h1>
+            <p>Visualizing {filteredData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
+          </div>
+          <div className="header-controls">
+            <button 
+              className="dark-mode-toggle"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+            >
+              {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
+            </button>
+            <FilterComponent 
+              species={uniqueSpecies}
+              selectedSpecies={selectedSpecies}
+              onSpeciesChange={setSelectedSpecies}
+            />
+          </div>
+        </div>
       </header>
 
-      <FilterComponent 
-        species={uniqueSpecies}
-        selectedSpecies={selectedSpecies}
-        onSpeciesChange={setSelectedSpecies}
-      />
+
 
       <MapComponent 
         zipCodeData={zipCodeData}

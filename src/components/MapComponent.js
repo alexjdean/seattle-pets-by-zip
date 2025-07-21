@@ -111,14 +111,14 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
       });
   }, []);
 
-  // Function to get circle color based on species
+  // Function to get circle color based on species (improved contrast and distinction)
   const getCircleColor = (species) => {
     switch (species) {
-      case 'Dog': return '#FF6B6B';
-      case 'Cat': return '#4ECDC4';
-      case 'Goat': return '#45B7D1';
-      case 'Pig': return '#96CEB4';
-      default: return '#FFEAA7';
+      case 'Dog': return '#e74c3c';    // Vibrant red
+      case 'Cat': return '#3498db';    // Bright blue  
+      case 'Goat': return '#f39c12';   // Orange
+      case 'Pig': return '#9b59b6';    // Purple
+      default: return '#95a5a6';       // Gray for unknown
     }
   };
 
@@ -144,19 +144,19 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
       <div className="map-legend">
         <h3>Legend</h3>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#FF6B6B' }}></div>
+          <div className="legend-color" style={{ backgroundColor: '#e74c3c' }}></div>
           <span>Dogs</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#4ECDC4' }}></div>
+          <div className="legend-color" style={{ backgroundColor: '#3498db' }}></div>
           <span>Cats</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#45B7D1' }}></div>
+          <div className="legend-color" style={{ backgroundColor: '#f39c12' }}></div>
           <span>Goats</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#96CEB4' }}></div>
+          <div className="legend-color" style={{ backgroundColor: '#9b59b6' }}></div>
           <span>Pigs</span>
         </div>
         <div className="legend-note">

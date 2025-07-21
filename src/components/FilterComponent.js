@@ -2,6 +2,10 @@ import React from 'react';
 import './FilterComponent.css';
 
 const FilterComponent = ({ species, selectedSpecies, onSpeciesChange }) => {
+  // Order species to match the legend order
+  const speciesOrder = ['Dog', 'Cat', 'Goat', 'Pig'];
+  const orderedSpecies = speciesOrder.filter(s => species.includes(s));
+  
   return (
     <div className="filter-container">
       <h3>Filter by Species</h3>
@@ -12,7 +16,7 @@ const FilterComponent = ({ species, selectedSpecies, onSpeciesChange }) => {
         >
           All Species
         </button>
-        {species.map(speciesName => (
+        {orderedSpecies.map(speciesName => (
           <button
             key={speciesName}
             className={selectedSpecies === speciesName ? 'active' : ''}
