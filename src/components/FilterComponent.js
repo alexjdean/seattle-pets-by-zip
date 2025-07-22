@@ -8,7 +8,7 @@ const FilterComponent = ({ species, selectedSpecies, onSpeciesChange }) => {
   
   return (
     <div className="filter-container">
-      <h3>Filter by Species</h3>
+      <h3>Filter by Pet</h3>
       <div className="filter-buttons">
         <button 
           className={selectedSpecies === 'All' ? 'active' : ''}
