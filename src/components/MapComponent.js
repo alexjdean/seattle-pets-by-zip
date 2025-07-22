@@ -209,6 +209,15 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
           <p>Total licenses shown: {zipCodeData.reduce((sum, item) => sum + item.count, 0)}</p>
           <p>Viewing: {selectedSpecies === 'All' ? 'All Species' : selectedSpecies}</p>
         </div>
+        
+        <a 
+          href="https://data.seattle.gov/City-Administration/Seattle-Pet-Licenses/jguv-t9rb/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="data-source-link desktop-only"
+        >
+          See the data source.
+        </a>
       </div>
       
       <MapContainer
@@ -417,9 +426,18 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
               </Popup>
             </CircleMarker>
                       );
-          }).filter(Boolean)}
+                    }).filter(Boolean)}
         </MapContainer>
-      
+        
+        <a 
+          href="https://data.seattle.gov/City-Administration/Seattle-Pet-Licenses/jguv-t9rb/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="data-source-link mobile-only"
+        >
+          See the data source.
+        </a>
+
     </div>
   );
 };
