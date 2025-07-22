@@ -146,26 +146,68 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
 
   return (
     <div className="map-container">
-      <div className="map-legend">
-        <h3>Legend</h3>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#e74c3c' }}></div>
-          <span>Dogs</span>
+      {/* Mobile top section: legend and stats side by side */}
+      <div className="mobile-top-section">
+        <div className="map-legend">
+          <h3>Legend</h3>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#e74c3c' }}></div>
+            <span>Dogs</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#3498db' }}></div>
+            <span>Cats</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#f39c12' }}></div>
+            <span>Goats</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#9b59b6' }}></div>
+            <span>Pigs</span>
+          </div>
+          <div className="legend-note">
+            <p>Circle size represents licenses</p>
+          </div>
         </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#3498db' }}></div>
-          <span>Cats</span>
+        
+        <div className="map-stats">
+          <h3>Statistics</h3>
+          <p>ZIP Codes: {mappableData.length}</p>
+          <p>Licenses: {zipCodeData.reduce((sum, item) => sum + item.count, 0).toLocaleString()}</p>
+          <p>Viewing: {selectedSpecies === 'All' ? 'All' : selectedSpecies}</p>
         </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#f39c12' }}></div>
-          <span>Goats</span>
+      </div>
+
+      <div className="desktop-sidebar">
+        <div className="map-legend desktop-only">
+          <h3>Legend</h3>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#e74c3c' }}></div>
+            <span>Dogs</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#3498db' }}></div>
+            <span>Cats</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#f39c12' }}></div>
+            <span>Goats</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: '#9b59b6' }}></div>
+            <span>Pigs</span>
+          </div>
+          <div className="legend-note">
+            <p>Circle size represents the number of licenses</p>
+          </div>
         </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#9b59b6' }}></div>
-          <span>Pigs</span>
-        </div>
-        <div className="legend-note">
-          <p>Circle size represents the number of licenses</p>
+        
+        <div className="map-stats desktop-only">
+          <h3>Statistics</h3>
+          <p>ZIP Codes with data: {mappableData.length}</p>
+          <p>Total licenses shown: {zipCodeData.reduce((sum, item) => sum + item.count, 0)}</p>
+          <p>Viewing: {selectedSpecies === 'All' ? 'All Species' : selectedSpecies}</p>
         </div>
       </div>
       
@@ -378,12 +420,6 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
           }).filter(Boolean)}
         </MapContainer>
       
-      <div className="map-stats">
-        <h3>Statistics</h3>
-        <p>ZIP Codes with data: {mappableData.length}</p>
-        <p>Total licenses shown: {zipCodeData.reduce((sum, item) => sum + item.count, 0)}</p>
-        <p>Viewing: {selectedSpecies === 'All' ? 'All Species' : selectedSpecies}</p>
-      </div>
     </div>
   );
 };

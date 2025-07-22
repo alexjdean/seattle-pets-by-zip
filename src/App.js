@@ -10,7 +10,23 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataInfo, setDataInfo] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Initialize dark mode from system preference and localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage first
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme !== null) {
+      return JSON.parse(savedTheme);
+    }
+    // Fall back to system preference
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Handle dark mode toggle with localStorage persistence
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
+  };
 
   // Apply dark mode class to body
   useEffect(() => {
@@ -151,17 +167,30 @@ function App() {
       <header className="App-header">
         <div className="header-content">
           <div className="header-text">
-            <h1>Seattle Pet Licenses Map</h1>
-            <p>Visualizing {petData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
+            <div className="header-text-content">
+              <h1>Seattle Pet Licenses Map</h1>
+              <p>Visualizing {petData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
+            </div>
+            <div className="mobile-dark-toggle">
+              <button 
+                className="dark-mode-toggle"
+                onClick={toggleDarkMode}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
+              </button>
+            </div>
           </div>
           <div className="header-controls">
-            <button 
-              className="dark-mode-toggle"
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-            >
-              {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
-            </button>
+            <div className="desktop-dark-toggle">
+              <button 
+                className="dark-mode-toggle"
+                onClick={toggleDarkMode}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
+              </button>
+            </div>
             <FilterComponent 
               species={uniqueSpecies}
               selectedSpecies={selectedSpecies}
@@ -170,9 +199,6 @@ function App() {
           </div>
         </div>
       </header>
-
-
-
       <MapComponent 
         zipCodeData={zipCodeData}
         selectedSpecies={selectedSpecies}

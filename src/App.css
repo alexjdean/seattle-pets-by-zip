@@ -58,8 +58,8 @@ body.dark-mode {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0 40px;
   gap: 32px;
 }
 
@@ -194,14 +194,21 @@ body {
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .App-header {
-    padding: 32px 20px 20px 20px;
-    margin-bottom: 24px;
+    padding: 32px 20px 12px 20px !important;
+    margin-bottom: 0px;
+    position: relative;
+  }
+  
+  .header-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 1200px !important;
   }
   
   .header-content {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 8px;
   }
   
   .header-controls {
@@ -211,6 +218,7 @@ body {
   
   .header-text h1 {
     font-size: 2.5rem;
+    margin-top: 35px;
   }
   
   .header-text p {
@@ -219,6 +227,41 @@ body {
   
   .dark-mode-toggle {
     font-size: 0.85rem;
+  }
+  
+  /* Position mobile dark mode button */
+  .mobile-dark-toggle {
+    position: absolute;
+    top: 32px;
+    right: 20px;
+    display: block;
+  }
+  
+  .desktop-dark-toggle {
+    display: none;
+  }
+}
+
+/* Desktop header layout */
+@media (min-width: 1024px) {
+  .App-header {
+    padding: 48px 0 24px 0;
+  }
+  
+  .header-content {
+    max-width: none;
+    margin: 0;
+    padding: 0 40px;
+    position: relative;
+  }
+  
+  .header-text {
+    flex: 1;
+  }
+  
+  .header-controls {
+    flex: 0 0 auto;
+    align-items: flex-end;
   }
 }
 
@@ -233,5 +276,22 @@ body {
   
   .header-text p {
     font-size: 1rem;
+  }
+}
+
+/* Desktop: hide mobile dark toggle, show desktop one */
+@media (min-width: 769px) {
+  .mobile-dark-toggle {
+    display: none;
+  }
+  
+  .desktop-dark-toggle {
+    display: block;
+    margin-bottom: 8px;
+  }
+  
+  .header-controls {
+    align-items: flex-end;
+    flex-direction: column;
   }
 }
