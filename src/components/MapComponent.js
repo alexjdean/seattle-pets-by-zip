@@ -79,11 +79,12 @@ const FALLBACK_COORDINATES = {
   '98199': [47.6564, -122.4089]
 };
 
-const MapComponent = ({ zipCodeData, selectedSpecies }) => {
+const MapComponent = ({ zipCodeData, selectedSpecies }) => {  
   const [mapCenter] = useState([47.6062, -122.3321]); // Seattle center
   const [mapZoom] = useState(11);
   const [zipBoundaries, setZipBoundaries] = useState(null);
   const [zipCentroids, setZipCentroids] = useState({});
+  const [centroidsLoaded, setCentroidsLoaded] = useState(false);
 
   // Load ZIP code boundaries
   useEffect(() => {
@@ -103,13 +104,18 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
             }
           }
         });
-        console.log('Calculated centroids for ZIP codes:', Object.keys(centroids));
+        // Centroids calculated for positioning circles
         setZipCentroids(centroids);
+        setCentroidsLoaded(true);
       })
       .catch(error => {
         console.error('Error loading ZIP boundaries:', error);
+        setCentroidsLoaded(true); // Still allow fallback coordinates
       });
   }, []);
+
+  // Create a key to force GeoJSON re-render when data changes
+  const geoJsonKey = `${selectedSpecies}-${zipCodeData.length}`;
 
   // Function to get circle color based on species (improved contrast and distinction)
   const getCircleColor = (species) => {
@@ -127,17 +133,16 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
     const maxRadius = 30;
     const minRadius = 5;
     const maxCount = Math.max(...zipCodeData.map(item => item.count));
+    // Calculate radius proportional to count within current dataset
     return Math.max(minRadius, (count / maxCount) * maxRadius);
   };
 
   // Filter zip codes that have calculated centroids or fallback coordinates
-  const mappableData = zipCodeData.filter(item => {
+  // Only filter if centroids have finished loading, otherwise show empty array
+  const mappableData = centroidsLoaded ? zipCodeData.filter(item => {
     const hasPosition = zipCentroids[item.zipCode] || FALLBACK_COORDINATES[item.zipCode];
     return hasPosition;
-  });
-  
-  console.log(`Mappable data count: ${mappableData.length}`, 
-    `Centroids available: ${Object.keys(zipCentroids).length}`);
+  }) : [];
 
   return (
     <div className="map-container">
@@ -177,6 +182,7 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
         {/* ZIP Code Boundaries */}
         {zipBoundaries && (
           <GeoJSON
+            key={geoJsonKey}
             data={zipBoundaries}
             style={{
               color: '#2563eb',
@@ -190,15 +196,77 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
                 const zipCode = feature.properties.ZCTA5CE10;
                 const zipData = zipCodeData.find(item => item.zipCode === zipCode);
                 
-                layer.bindPopup(`
-                  <div>
-                    <h4>ZIP Code: ${zipCode}</h4>
-                    ${zipData ? 
-                      `<p><strong>Pet Licenses: ${zipData.count}</strong></p>` : 
-                      '<p>No pet license data</p>'
+                if (zipData) {
+                  // Group pets by species for this ZIP code
+                  const speciesGroups = zipData.pets.reduce((acc, pet) => {
+                    const species = pet.Species;
+                    if (!acc[species]) acc[species] = [];
+                    acc[species].push(pet);
+                    return acc;
+                  }, {});
+
+                  // Calculate most common names based on current filter
+                  const getTopNames = (pets, count = 3) => {
+                    const nameCount = pets.reduce((acc, pet) => {
+                      const name = pet.Name;
+                      if (name && name.trim()) {
+                        acc[name] = (acc[name] || 0) + 1;
+                      }
+                      return acc;
+                    }, {});
+                    
+                    return Object.entries(nameCount)
+                      .sort(([,a], [,b]) => b - a)
+                      .slice(0, count)
+                      .map(([name, count]) => `${name} (${count})`)
+                      .join(', ');
+                  };
+
+                  layer.bindPopup(() => {
+                    const popupContent = document.createElement('div');
+                    popupContent.className = 'popup-content';
+                    
+                    let popupHTML = `
+                      <h4>ZIP Code: ${zipCode}</h4>
+                      <p><strong>${selectedSpecies === 'All' ? 'Total' : selectedSpecies} Licenses: ${zipData.count.toLocaleString()}</strong></p>
+                    `;
+                    
+                    // Show species breakdown if viewing all species
+                    if (selectedSpecies === 'All' && Object.keys(speciesGroups).length > 1) {
+                      popupHTML += `
+                        <hr />
+                        <p><strong>Species Breakdown:</strong></p>
+                        ${Object.entries(speciesGroups)
+                          .sort(([,a], [,b]) => b.length - a.length)
+                          .map(([species, pets]) => 
+                            `<p style="margin: 2px 0">${species}: ${pets.length.toLocaleString()} (${((pets.length / zipData.count) * 100).toFixed(1)}%)</p>`
+                          ).join('')}
+                      `;
                     }
-                  </div>
-                `);
+                    
+                    // Show most common names based on current filter
+                    let petsToAnalyze = [];
+                    if (selectedSpecies === 'All') {
+                      petsToAnalyze = zipData.pets;
+                    } else if (speciesGroups[selectedSpecies]) {
+                      petsToAnalyze = speciesGroups[selectedSpecies];
+                    }
+                    
+                    if (petsToAnalyze.length > 0) {
+                      const topNames = getTopNames(petsToAnalyze);
+                      if (topNames) {
+                        popupHTML += `
+                          <hr />
+                          <p><strong>Most common names:</strong></p>
+                                                     <p style="font-style: italic; color: var(--text-secondary);">${topNames}</p>
+                        `;
+                      }
+                    }
+                    
+                    popupContent.innerHTML = popupHTML;
+                    return popupContent;
+                  });
+                }
               }
             }}
           />
@@ -247,36 +315,62 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
               <Popup>
                 <div className="popup-content">
                   <h4>ZIP Code: {item.zipCode}</h4>
-                  <p><strong>Total Licenses: {item.count}</strong></p>
-                  {Object.entries(speciesGroups).map(([species, pets]) => (
-                    <p key={species}>
-                      {species}: {pets.length} 
-                      ({((pets.length / item.count) * 100).toFixed(1)}%)
-                    </p>
-                  ))}
-                  <hr />
-                  <p><em>Most common names:</em></p>
-                  {Object.entries(speciesGroups).map(([species, pets]) => {
-                    const nameCount = pets.reduce((acc, pet) => {
-                      const name = pet["Animal's Name"];
-                      if (name && name.trim()) {
-                        acc[name] = (acc[name] || 0) + 1;
+                  <p><strong>{selectedSpecies === 'All' ? 'Total' : selectedSpecies} Licenses: {item.count.toLocaleString()}</strong></p>
+                  
+                  {selectedSpecies === 'All' && Object.keys(speciesGroups).length > 1 && (
+                    <>
+                      <hr />
+                      <p><strong>Species Breakdown:</strong></p>
+                      {Object.entries(speciesGroups)
+                        .sort(([,a], [,b]) => b.length - a.length)
+                        .map(([species, pets]) => (
+                          <p key={species} style={{margin: '2px 0'}}>
+                            {species}: {pets.length.toLocaleString()} ({((pets.length / item.count) * 100).toFixed(1)}%)
+                          </p>
+                        ))}
+                    </>
+                  )}
+                  
+                  {(() => {
+                    // Calculate most common names based on current filter
+                    const getTopNames = (pets, count = 3) => {
+                      const nameCount = pets.reduce((acc, pet) => {
+                        const name = pet.Name;
+                        if (name && name.trim()) {
+                          acc[name] = (acc[name] || 0) + 1;
+                        }
+                        return acc;
+                      }, {});
+                      
+                      return Object.entries(nameCount)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, count)
+                        .map(([name, count]) => `${name} (${count})`)
+                        .join(', ');
+                    };
+                    
+                    // Determine which pets to analyze for names
+                    let petsToAnalyze = [];
+                    if (selectedSpecies === 'All') {
+                      petsToAnalyze = item.pets;
+                    } else if (speciesGroups[selectedSpecies]) {
+                      petsToAnalyze = speciesGroups[selectedSpecies];
+                    }
+                    
+                    if (petsToAnalyze.length > 0) {
+                      const topNames = getTopNames(petsToAnalyze);
+                      if (topNames) {
+                        return (
+                          <>
+                            <hr />
+                            <p><strong>Most common names:</strong></p>
+                                                         <p style={{fontStyle: 'italic', color: 'var(--text-secondary)'}}>{topNames}</p>
+                          </>
+                        );
                       }
-                      return acc;
-                    }, {});
-                    
-                    const topNames = Object.entries(nameCount)
-                      .sort(([,a], [,b]) => b - a)
-                      .slice(0, 3)
-                      .map(([name, count]) => `${name} (${count})`)
-                      .join(', ');
-                    
-                    return topNames ? (
-                      <p key={species} className="popular-names">
-                        {species}: {topNames}
-                      </p>
-                    ) : null;
-                  })}
+                    }
+                    return null;
+                  })()}
                 </div>
               </Popup>
             </CircleMarker>

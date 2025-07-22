@@ -23,7 +23,7 @@ function App() {
 
   useEffect(() => {
     // Load preprocessed JSON data for fastest performance
-    fetch('/pets_clean.json')
+    fetch('/pets_clean_v2.json')
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -59,7 +59,8 @@ function App() {
     if (selectedSpecies === 'All') {
       setFilteredData(petData);
     } else {
-      setFilteredData(petData.filter(row => row['Species'] === selectedSpecies));
+      const filtered = petData.filter(row => row['Species'] === selectedSpecies);
+      setFilteredData(filtered);
     }
   }, [petData, selectedSpecies]);
 
@@ -151,7 +152,7 @@ function App() {
         <div className="header-content">
           <div className="header-text">
             <h1>Seattle Pet Licenses Map</h1>
-            <p>Visualizing {filteredData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
+            <p>Visualizing {petData.length.toLocaleString()} pet licenses across Seattle ZIP codes</p>
           </div>
           <div className="header-controls">
             <button 
