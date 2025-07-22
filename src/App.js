@@ -39,7 +39,7 @@ function App() {
 
   useEffect(() => {
     // Load preprocessed JSON data for fastest performance
-    fetch('/pets_clean_v2.json')
+    fetch('./pets_clean_v2.json')
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

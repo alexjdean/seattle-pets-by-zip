@@ -88,7 +88,7 @@ const MapComponent = ({ zipCodeData, selectedSpecies }) => {
 
   // Load ZIP code boundaries
   useEffect(() => {
-    fetch('/seattle_zip_boundaries.geojson')
+    fetch('./seattle_zip_boundaries.geojson')
       .then(response => response.json())
       .then(data => {
         setZipBoundaries(data);
