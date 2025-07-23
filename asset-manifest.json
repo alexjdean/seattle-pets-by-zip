@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/seattle-pets-by-zip/static/css/main.ccadae83.css",
+    "main.js": "/seattle-pets-by-zip/static/js/main.d85d8c2d.js",
+    "index.html": "/seattle-pets-by-zip/index.html",
+    "main.ccadae83.css.map": "/seattle-pets-by-zip/static/css/main.ccadae83.css.map",
+    "main.d85d8c2d.js.map": "/seattle-pets-by-zip/static/js/main.d85d8c2d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ccadae83.css",
+    "static/js/main.d85d8c2d.js"
+  ]
+}
