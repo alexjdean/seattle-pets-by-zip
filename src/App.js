@@ -1,104 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import MapComponent from './components/MapComponent';
 import FilterComponent from './components/FilterComponent';
+import { useDarkMode } from './hooks/useDarkMode';
+import { usePetData } from './hooks/usePetData';
 import './App.css';
 
 function App() {
-  const [petData, setPetData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [selectedSpecies, setSelectedSpecies] = useState('All');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dataInfo, setDataInfo] = useState(null);
-  // Initialize dark mode from system preference and localStorage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check localStorage first
-    const savedTheme = localStorage.getItem('darkMode');
-    if (savedTheme !== null) {
-      return JSON.parse(savedTheme);
-    }
-    // Fall back to system preference
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  // Handle dark mode toggle with localStorage persistence
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
-  };
-
-  // Apply dark mode class to body
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    // Load preprocessed JSON data for fastest performance
-    fetch('./pets_clean_v2.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Data loaded successfully:', data.length, 'records');
-
-        setPetData(data);
-        setFilteredData(data);
-
-        // Get unique species for the filter
-        const speciesSet = new Set(data.map(row => row['Species']));
-        const uniqueSpecies = Array.from(speciesSet).sort();
-        
-        setDataInfo({
-          totalRecords: data.length,
-          species: uniqueSpecies
-        });
-
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error loading data:', error);
-        setError('Error loading pet data: ' + error.message);
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    // Filter data based on selected species
-    if (selectedSpecies === 'All') {
-      setFilteredData(petData);
-    } else {
-      const filtered = petData.filter(row => row['Species'] === selectedSpecies);
-      setFilteredData(filtered);
-    }
-  }, [petData, selectedSpecies]);
-
-  // Group data by ZIP code and count licenses
-  const groupedData = filteredData.reduce((acc, row) => {
-    const zipCode = row['ZIP Code'];
-    if (!acc[zipCode]) {
-      acc[zipCode] = {
-        zipCode,
-        count: 0,
-        pets: []
-      };
-    }
-    acc[zipCode].count += 1;
-    acc[zipCode].pets.push(row);
-    return acc;
-  }, {});
-
-  const zipCodeData = Object.values(groupedData);
-
-  // Get unique species for filter
-  const uniqueSpecies = dataInfo ? dataInfo.species : [];
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { 
+    petData, 
+    selectedSpecies, 
+    setSelectedSpecies, 
+    loading, 
+    error, 
+    uniqueSpecies, 
+    zipCodeData 
+  } = usePetData();
 
   if (loading) {
     return (
@@ -112,7 +29,7 @@ function App() {
             <div className="header-controls">
               <button 
                 className="dark-mode-toggle"
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleDarkMode}
                 aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
               >
                 {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
@@ -140,7 +57,7 @@ function App() {
             <div className="header-controls">
               <button 
                 className="dark-mode-toggle"
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleDarkMode}
                 aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
               >
                 {isDarkMode ? 'Prefer light mode?' : 'Prefer dark mode?'}
